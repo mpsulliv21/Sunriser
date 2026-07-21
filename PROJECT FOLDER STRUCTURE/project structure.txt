@@ -1,0 +1,14 @@
+/your-site
+   /css
+      style.css
+   /js
+      app.js
+   /pages
+      pricing.html
+      signup.html
+      login.html
+      dashboard.html
+      checkin.html
+      profile.html
+      admin.html
+   index.html
