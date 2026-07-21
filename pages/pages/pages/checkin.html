@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monthly Check-In</title>
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="../js/app.js" defer></script>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Monthly Check-In</h2>
+
+        <h3>Upload Receipts</h3>
+        <input id="receipt" type="file">
+
+        <h3>Enter Monthly Expenses</h3>
+        <input id="housing" type="number" placeholder="Housing">
+        <input id="transportation" type="number" placeholder="Transportation">
+        <input id="food" type="number" placeholder="Food">
+        <input id="entertainment" type="number" placeholder="Entertainment">
+        <input id="misc" type="number" placeholder="Miscellaneous">
+
+        <button onclick="submitCheckin()">Submit Check-In</button>
+    </div>
+
+    <script>
+        function submitCheckin() {
+            const user = auth.currentUser;
+            if (!user) return alert("You must be logged in.");
+
+            const file = document.getElementById("receipt").files[0];
+            const month = new Date().toISOString().slice(0, 7);
+
+            let receiptURL = "";
+
+            if (file) {
+                const ref = storage.ref(`receipts/${user.uid}/${month}/${file.name}`);
+                ref.put(file).then(() => {
+                    ref.getDownloadURL().then(url => {
+                        receiptURL = url;
+                        saveReport(url);
+                    });
+                });
+            } else {
+                saveReport("");
+            }
+
+            function saveReport(url) {
+                const expenses = {
+                    housing: Number(document.getElementById("housing").value),
+                    transportation: Number(document.getElementById("transportation").value),
+                    food: Number(document.getElementById("food").value),
+                    entertainment: Number(document.getElementById("entertainment").value),
+                    misc: Number(document.getElementById("misc").value)
+                };
+
+                const totalExpenses = expenses.housing + expenses.transportation + expenses.food + expenses.entertainment + expenses.misc;
+
+                db.collection("users").doc(user.uid).get().then(doc => {
+                    const data = doc.data();
+                    const saved = data.income - totalExpenses;
+                    const percent = Math.round((saved / data.savingsGoal) * 100);
+
+                    db.collection("users").doc(user.uid).update({
+                        [`monthlyReports.${month}`]: {
+                            expenses,
+                            totalExpenses,
+                            saved,
+                            percent,
+                            receipt: url
+                        }
+                    }).then(() => {
+                        window.location.href = "dashboard.html";
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>
