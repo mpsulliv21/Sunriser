@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Financial Profile</title>
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="../js/app.js" defer></script>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Your Financial Profile</h2>
+
+        <h3>Demographics</h3>
+        <input id="age" type="number" placeholder="Age">
+        <input id="location" type="text" placeholder="City, State">
+        <input id="employment" type="text" placeholder="Employment Status">
+
+        <h3>Monthly Income</h3>
+        <input id="income" type="number" placeholder="Total Monthly Income">
+
+        <h3>Monthly Expenses (Category-Based)</h3>
+        <input id="housing" type="number" placeholder="Housing">
+        <input id="transportation" type="number" placeholder="Transportation">
+        <input id="food" type="number" placeholder="Food">
+        <input id="entertainment" type="number" placeholder="Entertainment">
+        <input id="misc" type="number" placeholder="Miscellaneous">
+
+        <h3>Savings Goal</h3>
+        <input id="goal" type="number" placeholder="Monthly Savings Goal ($)">
+
+        <button onclick="saveProfile()">Save Profile</button>
+    </div>
+
+    <script>
+        function saveProfile() {
+            const user = auth.currentUser;
+            if (!user) return alert("You must be logged in.");
+
+            db.collection("users").doc(user.uid).update({
+                demographics: {
+                    age: document.getElementById("age").value,
+                    location: document.getElementById("location").value,
+                    employment: document.getElementById("employment").value
+                },
+                income: Number(document.getElementById("income").value),
+                expenses: {
+                    housing: Number(document.getElementById("housing").value),
+                    transportation: Number(document.getElementById("transportation").value),
+                    food: Number(document.getElementById("food").value),
+                    entertainment: Number(document.getElementById("entertainment").value),
+                    misc: Number(document.getElementById("misc").value)
+                },
+                savingsGoal: Number(document.getElementById("goal").value)
+            }).then(() => {
+                window.location.href = "dashboard.html";
+            });
+        }
+    </script>
+</body>
+</html>
