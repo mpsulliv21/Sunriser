@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Your Financial Profile</title>
+    <title>Your Dashboard</title>
     <link rel="stylesheet" href="../css/style.css">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -12,54 +12,36 @@
 </head>
 
 <body>
-    <div class="form-container">
-        <h2>Your Financial Profile</h2>
+    <div class="dashboard-container">
+        <h2>Your Financial Dashboard</h2>
 
-        <h3>Demographics</h3>
-        <input id="age" type="number" placeholder="Age">
-        <input id="location" type="text" placeholder="City, State">
-        <input id="employment" type="text" placeholder="Employment Status">
+        <div id="summary"></div>
 
-        <h3>Monthly Income</h3>
-        <input id="income" type="number" placeholder="Total Monthly Income">
-
-        <h3>Monthly Expenses (Category-Based)</h3>
-        <input id="housing" type="number" placeholder="Housing">
-        <input id="transportation" type="number" placeholder="Transportation">
-        <input id="food" type="number" placeholder="Food">
-        <input id="entertainment" type="number" placeholder="Entertainment">
-        <input id="misc" type="number" placeholder="Miscellaneous">
-
-        <h3>Savings Goal</h3>
-        <input id="goal" type="number" placeholder="Monthly Savings Goal ($)">
-
-        <button onclick="saveProfile()">Save Profile</button>
+        <a href="checkin.html" class="btn-primary">Monthly Check-In</a>
     </div>
 
     <script>
-        function saveProfile() {
-            const user = auth.currentUser;
-            if (!user) return alert("You must be logged in.");
+        auth.onAuthStateChanged(user => {
+            if (!user) return window.location.href = "login.html";
 
-            db.collection("users").doc(user.uid).update({
-                demographics: {
-                    age: document.getElementById("age").value,
-                    location: document.getElementById("location").value,
-                    employment: document.getElementById("employment").value
-                },
-                income: Number(document.getElementById("income").value),
-                expenses: {
-                    housing: Number(document.getElementById("housing").value),
-                    transportation: Number(document.getElementById("transportation").value),
-                    food: Number(document.getElementById("food").value),
-                    entertainment: Number(document.getElementById("entertainment").value),
-                    misc: Number(document.getElementById("misc").value)
-                },
-                savingsGoal: Number(document.getElementById("goal").value)
-            }).then(() => {
-                window.location.href = "dashboard.html";
+            db.collection("users").doc(user.uid).get().then(doc => {
+                const data = doc.data();
+
+                const expenses = data.expenses;
+                const totalExpenses = expenses.housing + expenses.transportation + expenses.food + expenses.entertainment + expenses.misc;
+
+                const saved = data.income - totalExpenses;
+                const percent = Math.round((saved / data.savingsGoal) * 100);
+
+                document.getElementById("summary").innerHTML = `
+                    <p><strong>Monthly Income:</strong> $${data.income}</p>
+                    <p><strong>Total Expenses:</strong> $${totalExpenses}</p>
+                    <p><strong>Saved:</strong> $${saved}</p>
+                    <p><strong>Goal:</strong> $${data.savingsGoal}</p>
+                    <p><strong>Progress:</strong> ${percent}% of goal</p>
+                `;
             });
-        }
+        });
     </script>
 </body>
 </html>
